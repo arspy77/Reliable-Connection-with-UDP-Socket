@@ -65,6 +65,8 @@ class FilePacketSender:
         self._packet[5], self._packet[6] = int_to_bytes(xor_all(self._packet[:5] + self._data))
         self._packet += self._data
 
+    # None -> None
+    # read the next data in the file, check if all data are read
     def _read_next_data(self):
         if self._file.closed:
             self._is_done = True
@@ -82,7 +84,7 @@ class FilePacketSender:
         if self._is_done:
             return bytearray(b'')
         else:
-            return self._packet
+            return self._packet.copy()
 
     # bytearray -> bool
     # check validity of ack based on last sent packet, change the value of rcv_seq
