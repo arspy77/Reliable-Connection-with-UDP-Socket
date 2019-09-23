@@ -1,5 +1,5 @@
 import socket
-from filepacket import get_id, FilePacketWriter
+from filepacket import get_id, FilePacketReceiver
 
 # class to recieve packet over UDP socket and distribute the packet to multiples file writer
 class Receiver:
@@ -21,10 +21,18 @@ class Receiver:
                 continue
             idd = ret_addr + "-" + str(id)
             if idd not in self._writer:
-            self._writer[idd] = FilePacketWriter(idd, id)
+                self._writer[idd] = FilePacketWriter(idd, id)
         if self._writer[idd].recieve_packet(packet):
             seq = self._writer[id].rcv_seq()
             print("Recieved packet", idd, "seq", seq)
             self._ret_socket.sendto(self._writer[idd].send_ack(), (ret_addr, self._port))
         else:
             print("Recieved bad packet from", ret_addr)
+
+if __name__ == "__main__":
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(('localhost', 10000))
+    print("Reciever active on", socket.gethostbyname(socket.gethostname()), "port", sock.getsockname()[1])
+    while True:
+        packet, ret_addr = sock.recvfrom(1024)
+        print("Recieved", packet.decode(), "bytes from", ret_addr[0], "port", ret_addr[1])

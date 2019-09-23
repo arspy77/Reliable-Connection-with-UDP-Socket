@@ -114,7 +114,7 @@ class FilePacketSender:
     
 
 # class to write to filename, verify packet recieved, and generate ack
-class FilePacketReciever:
+class FilePacketReceiver:
     # string, id
     def __init__(self, filename, id):
         self._file = open(filename, "wb")

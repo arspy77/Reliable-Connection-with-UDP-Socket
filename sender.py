@@ -1,7 +1,9 @@
 import threading
 import socket
-from filereader import FilePacketReader
+from filepacket import FilePacketSender
 import time
+import string
+import random
 
 class ThreadTimer(threading.Thread):
     def __init__(self, event, time, function):
@@ -46,10 +48,12 @@ def file_sender_thread(ip, port, filepath, id):
     sender.run()
 
 if __name__ == "__main__":
-    UDP_IP = input("Insert reciever IP   : ")
-    UDP_PORT = int(input("Insert reciever port : "))
-    file_n = int(input("Insert files count : "))
-    for i in range(file_n):
-        filepath = input("Insert file " + str(i) + " path :")    
-        sender_thread = threading.Thread(file_sender_thread, UDP_IP, UDP_PORT, filepath, id)
-        sender_thread.start()
+    # UDP_IP = input("Insert reciever IP   : ")
+    # UDP_PORT = int(input("Insert reciever port : "))
+    letters = string.ascii_lowercase
+    message = ''.join(random.choice(letters) for i in range(10))
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    while True:
+        sock.sendto(message.encode(), ('localhost', 10000))
+        print(message)
+        time.sleep(1)
