@@ -1,17 +1,12 @@
-from filereader import FilePacketReader, FilePacketWriter
+from filepacket import FilePacketSender, FilePacketReciever
 
-sender = FilePacketReader("jyq5TU5.jpg", 0)
-reciever = FilePacketWriter("jyq5TU5copy.jpg", 0)
-i = 0
-packet = sender.read(i)
-while packet != b'':
-    print(packet)
-    if not reciever.write(packet):
-        print('fail')
-        break
-    # packet = reciever.generate_ack()
-    # if not sender.check_ack(packet):
-    #     print('fail ack')
-    #     break
-    i += 1
-    packet = sender.read(i)
+if __name__ == "__main__":
+    sender = FilePacketSender("testImage.jpg", 0)
+    reciever = FilePacketReciever("testImage2.jpg", 0)
+    while not sender.is_done():
+        packet = sender.send_packet()
+        # print(packet)
+        if reciever.recieve_packet(packet):
+            ack = reciever.send_ack()
+            sender.recieve_ack(ack)
+    print("done")
