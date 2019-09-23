@@ -29,7 +29,9 @@ def bytes_to_int(a, b):
 # bytearray -> int
 # get the id number (between range 0 - 4) of a packet
 def get_id(packet):
-    _, id = int_to_bytes(packet[0])
+    if len(packet) < 7:
+        return -1
+    id = packet[0] & 0xF
     return id
 
 # max data length in a single transport packet
@@ -165,8 +167,11 @@ class FilePacketReciever:
         packet[5], packet[6] = int_to_bytes(xor_all(packet[:5]))
         return packet
 
-    def last_seq(self):
-        return self._last_seq
+    def write_seq(self):
+        return self._write_seq
+
+    def rcv_seq(self):
+        return self._rcv_seq
 
     def is_done(self):
         return self._is_done
