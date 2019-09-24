@@ -6,7 +6,7 @@ import string
 import random
 
 class ThreadTimer(threading.Thread):
-    def __init__(self, event, time, function):
+    def __init__(self, event, time, function, args):
         threading.Thread.__init__(self)
         self.stopped = event
         self.function = function
@@ -22,25 +22,22 @@ class Sender:
         self._receiver_ip = ip
         self._receiver_port = port
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._ret_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        my_ip = socket.gethostbyname(socket.gethostname())
-        self._ret_socket.bind((my_ip, port))
-        self._reader = FilePacketReader(filename, id)
+        self._reader = FilePacketSender(filename, id)
         
     def send_message(self,MESSAGE):
-        self._sock.sendto(MESSAGE, (self._receiver_ip, self._receiver_port))
+        self._socket.sendto(MESSAGE, (self._receiver_ip, self._receiver_port))
 
     def run(self):
-        seq_number = 0
-        packet = self._reader.read(seq_number)
-        while packet != b'':
+        while not(self._reader.is_done()):
             stop_flag = threading.Event()
-            timer = ThreadTimer(stop_flag, 5, self.send_message, packet)
-            self.send_message(packet)
+            timer = ThreadTimer(stop_flag, 5, self.send_message, self._reader.send_packet())
+            self.send_message(self._reader.send_packet())
             timer.start()
-            self._ret_socket.recvfrom(1024)
+            ack, _ = self._socket.recvfrom(1024)
+            while not(self._reader.recieve_ack(ack)):
+                print("1")
+                ack, _ = self._socket.recvfrom(1024)
             stop_flag.set()
-        # still need to impl
 
 
 def file_sender_thread(ip, port, filepath, id):
@@ -48,12 +45,11 @@ def file_sender_thread(ip, port, filepath, id):
     sender.run()
 
 if __name__ == "__main__":
-    # UDP_IP = input("Insert reciever IP   : ")
-    # UDP_PORT = int(input("Insert reciever port : "))
-    letters = string.ascii_lowercase
-    message = ''.join(random.choice(letters) for i in range(10))
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    while True:
-        sock.sendto(message.encode(), ('localhost', 10000))
-        print(message)
-        time.sleep(1)
+    UDP_IP = input("Insert reciever IP   : ")
+    UDP_PORT = int(input("Insert reciever port : "))
+    n = int(input("Insert number of files to send: "))
+    for i in range(n):
+        filepath = input('Insert Filepath #' + str(i) + ': ')
+        thread = threading.Thread(target=file_sender_thread, args=(UDP_IP,  UDP_PORT, filepath, i))
+        thread.start()
+    
