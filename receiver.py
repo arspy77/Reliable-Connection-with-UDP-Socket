@@ -3,12 +3,12 @@ from filepacket import get_id, FilePacketReceiver
 
 # class to recieve packet over UDP socket and distribute the packet to multiples file writer
 class Receiver:
-    def __init__(self):
+    def __init__(self, port_number):
+        self._port = port_number
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._ip = socket.gethostbyname(socket.gethostname()) # get current computer IP address
-        self._socket.bind((self._ip, 0)) # automatically find open port to connect to
-        self._port = self._socket.getsockname()[1]
-        print("Reciever active on", self._ip, "port", self._port)
+        self._socket.bind(('', port_number)) # automatically find open port to connect to
+        self._ip = self._socket.getsockname()[0]
+        print("Reciever active on", socket.gethostbyname(socket.gethostname()), "port", self._port)
         self._writer = {}
 
     # recieve packet from (ip, port) and distribute it to the corresponding file writer
@@ -29,5 +29,6 @@ class Receiver:
                 print("Recieved bad packet from", ret_addr)
 
 if __name__ == "__main__":
-    rec = Receiver()
+    port_number = int(input("Insert reciever port   : "))
+    rec = Receiver(port_number)
     rec.run()
