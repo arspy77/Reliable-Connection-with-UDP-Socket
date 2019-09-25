@@ -50,7 +50,7 @@ def progresbar():
     for i in range(21):
         sys.stdout.write('\r')
         sys.stdout.write("[%-20s] %d%%" % ('='*i, 5*i))
-        time.sleep(0.1)
+        time.sleep(0.01)
     print()
 if __name__ == "__main__":
     UDP_IP = input("Insert reciever IP   : ")
