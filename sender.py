@@ -4,6 +4,7 @@ from filepacket import FilePacketSender
 import time
 import string
 import random
+import sys
 
 class ThreadTimer(threading.Thread):
     def __init__(self, event, time, function, args):
@@ -31,6 +32,7 @@ class Sender:
         while not(self._reader.is_done()):
             stop_flag = threading.Event()
             timer = ThreadTimer(stop_flag, 5, self.send_message, self._reader.send_packet())
+            progresbar()
             self.send_message(self._reader.send_packet())
             timer.start()
             ack, _ = self._socket.recvfrom(1024)
@@ -44,6 +46,12 @@ def file_sender_thread(ip, port, filepath, id):
     sender = Sender(ip, port, filepath, id)
     sender.run()
 
+def progresbar(): 
+    for i in range(21):
+        sys.stdout.write('\r')
+        sys.stdout.write("[%-20s] %d%%" % ('='*i, 5*i))
+        time.sleep(0.1)
+    print()
 if __name__ == "__main__":
     UDP_IP = input("Insert reciever IP   : ")
     UDP_PORT = int(input("Insert reciever port : "))
