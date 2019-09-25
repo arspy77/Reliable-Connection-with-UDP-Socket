@@ -36,7 +36,7 @@ class Sender:
             self.send_message(self._reader.send_packet())
             timer.start()
             ack, _ = self._socket.recvfrom(1024)
-            while not(self._reader.recieve_ack(ack)):
+            while not(self._reader.receive_ack(ack)):
                 print("1")
                 ack, _ = self._socket.recvfrom(1024)
             stop_flag.set()
@@ -53,8 +53,8 @@ def progresbar():
         time.sleep(0.01)
     print()
 if __name__ == "__main__":
-    UDP_IP = input("Insert reciever IP   : ")
-    UDP_PORT = int(input("Insert reciever port : "))
+    UDP_IP = input("Insert receiver IP   : ")
+    UDP_PORT = int(input("Insert receiver port : "))
     n = int(input("Insert number of files to send: "))
     for i in range(n):
         filepath = input('Insert Filepath #' + str(i) + ': ')

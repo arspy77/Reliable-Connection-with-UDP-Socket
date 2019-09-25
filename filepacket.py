@@ -47,7 +47,8 @@ class FilePacketSender:
         self._read_seq = 0 # sequence number of self._data
         self._rcv_seq = -1 # sequence number of last confirmed ack
         self._is_done = False # the last data is confirmed
-        self._data = self._file.read(MAX_PACKET_DATA)
+        self._data = bytes([len(filename)]) + filename.encode()
+        self._data += self._file.read(MAX_PACKET_DATA - len(self._data))
         self._next_data = self._file.read(MAX_PACKET_DATA)
         if self._next_data == b'':
             self._file.close()
@@ -88,7 +89,7 @@ class FilePacketSender:
 
     # bytearray -> bool
     # check validity of ack based on last sent packet, change the value of rcv_seq
-    def recieve_ack(self, packet):
+    def receive_ack(self, packet):
         if len(packet) < 7:
             return False
         types = packet[0] >> 4
@@ -108,23 +109,26 @@ class FilePacketSender:
             return False
 
     # None -> bool
-    # check if all file read is already recieved
+    # check if all file read is already received
     def is_done(self):
         return self._is_done
     
 
-# class to write to filename, verify packet recieved, and generate ack
+# class to write to filename, verify packet received, and generate ack
 class FilePacketReceiver:
     # string, id
-    def __init__(self, filename, id):
-        self._file = open(filename, "wb")
-        self._id = id
+    def __init__(self, packet):
+        self._id = get_id(packet)
+        filename_len = packet[7]
+        self._filename = packet[8:8+filename_len].decode()
+        self._file = open("rcv_" + self._filename, "wb")
         self._write_seq = -1 # packet sequence number of last writen data
-        self._rcv_seq = -1 # packet sequence number of last recieved valid data
+        self._rcv_seq = -1 # packet sequence number of last received valid data
         self._is_done = False
+        self._success = self.receive_packet(packet)
 
     # None -> bool
-    # check whether recieved packet is valid or not
+    # check whether received packet is valid or not
     def _check_packet(self, packet):
         if len(packet) < 7:
             return False
@@ -144,20 +148,25 @@ class FilePacketReceiver:
             return False
 
     # None -> bool
-    # verify and write packet recieved
-    def recieve_packet(self, packet):
+    # verify and write packet received
+    def receive_packet(self, packet):
         if not self._check_packet(packet):
+            self._success = False
             return False
+        if bytes_to_int(packet[1], packet[2]) == 0:
+            filename_len = self._data[0]
+            self._data = self._data[filename_len+1:]
         if self._rcv_seq == self._write_seq + 1:
             self._file.write(self._data)
             self._write_seq += 1
             if self._types == 0x02:
                 self._file.close()
                 self._is_done = True
+        self._success = True
         return True
     
     # None -> bytearray
-    # generate ack for last data recieved
+    # generate ack for last data received
     def send_ack(self):
         packet = bytearray(7)
         packet[0] ^= 0x10
@@ -177,3 +186,9 @@ class FilePacketReceiver:
 
     def is_done(self):
         return self._is_done
+        
+    def filename(self):
+        return self._filename
+
+    def success(self):
+        return self._success
