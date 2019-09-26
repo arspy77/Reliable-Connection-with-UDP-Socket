@@ -4,7 +4,8 @@ from filepacket import FilePacketSender
 import time
 import sys
 import os
-# class for a thread that runs function with args every time seconds
+
+# class for a thread that runs function with args every time (seconds)
 class ThreadTimer(threading.Thread):
     def __init__(self, event, time, function, args):
         threading.Thread.__init__(self)
@@ -16,6 +17,7 @@ class ThreadTimer(threading.Thread):
     def run(self):
         while not self.stopped.wait(self.time):
             self.function(self.args)
+# end of ThreadTimer class definition 
 
 # class for reading data from file named filename and send packet to (ip, port)
 class Sender:
@@ -29,10 +31,12 @@ class Sender:
         self.partsize = 0
         global progress
 
+    # byte-like -> None
     # send MESSAGE to (ip, port)
     def send_message(self,MESSAGE):
         self._socket.sendto(MESSAGE, (self._receiver_ip, self._receiver_port))
         
+    # None -> None
     # read data from file named filename and send packet to (ip, port)
     def run(self):
         while not(self._reader.is_done()):
@@ -48,8 +52,9 @@ class Sender:
             if self.partsize > self.filesize:
                 self.partsize = self.filesize
             progress[self._id] = self.partsize/self.filesize
-        
+# end of Sender class definition      
 
+# (string, int, string, int) -> None
 # thread for a sender for each file
 def file_sender_thread(ip, port, filepath, id):
     sender = Sender(ip, port, filepath, id)
@@ -57,7 +62,8 @@ def file_sender_thread(ip, port, filepath, id):
     print(ip, port, filepath, id)
 
 
-# retuns True if all progress has ended
+# (float, int) -> boolean
+# retuns True if all n progress has ended
 def progress_ended(progress, n):
     end = True
     for i in range(n):
@@ -65,14 +71,20 @@ def progress_ended(progress, n):
             end = False
     return end
 
+# main sender program to be run with two arguments, ip and port of desired receiver
+# insert n (number of files to send)
+# insert all n filenames
+# wait until all is finished
 if __name__ == "__main__":
     UDP_IP = sys.argv[1]
     UDP_PORT = int(sys.argv[2])
     n = int(input("Insert number of files to send: "))
-
+    # list of threads
     thread = []
+    # list of all filepaths
     filepath = []
-
+    # global list to store progress of all threads/files (from 0 - 1)
+    # list will be updated by each thread
     global progress
     progress = []
 
@@ -85,11 +97,13 @@ if __name__ == "__main__":
         thread[i].start()
 
     while not progress_ended(progress, n): 
+        # clearscreen
         if os.name =='nt':
             os.system('cls')
         else:
             os.system('clear')
 
+        # draw the progress bar of all threads/files
         for i in range(n):
             sys.stdout.write("[%-20s]" % ('='*int(progress[i]*20)))
             sys.stdout.write(str(int(progress[i]*100))+"%")
@@ -99,6 +113,6 @@ if __name__ == "__main__":
             sys.stdout.flush()
         
     sys.stdout.write("All files successfully sent\n")
-        
+# end of main sender program   
     
 
