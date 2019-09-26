@@ -114,7 +114,7 @@ class FilePacketSender:
         return self._is_done
 
     # None -> int
-    def get_rcv_seq(self):
+    def rcv_seq(self):
         return self._rcv_seq
     
 

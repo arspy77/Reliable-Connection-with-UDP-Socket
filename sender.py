@@ -23,18 +23,15 @@ class Sender:
     def __init__(self, ip, port, filename, id):
         self._receiver_ip = ip
         self._receiver_port = port
+        self._id = id
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._reader = FilePacketSender(filename, id)
+        self._reader = FilePacketSender(filename, self._id)
         self.filesize = os.stat(filename).st_size
         self.partsize = 0
         global progress
 
     def send_message(self,MESSAGE):
         self._socket.sendto(MESSAGE, (self._receiver_ip, self._receiver_port))
-        self.partsize = (self._reader.get_rcv_seq() + 1) * 32768
-        if self.partsize > self.filesize:
-            self.partsize = self.filesize
-        progress[id] = self.partsize/self.filesize
         
 
     def run(self):
@@ -47,6 +44,10 @@ class Sender:
             while not(self._reader.receive_ack(ack)):
                 ack, _ = self._socket.recvfrom(1024)
             stop_flag.set()
+            self.partsize = (self._reader.rcv_seq() + 1) * 32768
+            if self.partsize > self.filesize:
+                self.partsize = self.filesize
+            progress[self._id] = self.partsize/self.filesize
         
 
 
@@ -63,8 +64,8 @@ def progresbar():
     print()
 
 if __name__ == "__main__":
-    UDP_IP = input("Insert receiver IP   : ")
-    UDP_PORT = int(input("Insert receiver port : "))
+    UDP_IP = sys.argv[1]
+    UDP_PORT = int(sys.argv[2])
     n = int(input("Insert number of files to send: "))
     thread = []
     filepath = []
