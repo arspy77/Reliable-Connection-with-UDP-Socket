@@ -1,4 +1,5 @@
 import socket
+import sys
 from filepacket import get_id, FilePacketReceiver
 
 # class to receive packet over UDP socket and distribute the packet to multiples file writer
@@ -31,6 +32,6 @@ class Receiver:
                 print("received bad packet from", ret_addr)
 
 if __name__ == "__main__":
-    port_number = int(input("Insert receiver port   : "))
+    port_number = sys.argv[1]
     rec = Receiver(port_number)
     rec.run()
