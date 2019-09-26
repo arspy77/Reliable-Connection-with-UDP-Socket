@@ -112,6 +112,10 @@ class FilePacketSender:
     # check if all file read is already received
     def is_done(self):
         return self._is_done
+
+    # None -> int
+    def get_rcv_seq(self):
+        return self._rcv_seq
     
 
 # class to write to filename, verify packet received, and generate ack

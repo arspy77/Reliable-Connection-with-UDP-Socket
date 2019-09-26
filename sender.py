@@ -27,13 +27,16 @@ class Sender:
         self._reader = FilePacketSender(filename, id)
         self.filesize = os.stat(filename).st_size
         self.partsize = 0
+        global progress
+
     def send_message(self,MESSAGE):
         self._socket.sendto(MESSAGE, (self._receiver_ip, self._receiver_port))
-        self.partsize+= (sys.getsizeof(MESSAGE)-36)
-        sys.stdout.write('\r')
-        sys.stdout.write("[%-20s]" % ('='*int(self.partsize/self.filesize*20)))
-        sys.stdout.write(str(int(self.partsize/self.filesize*100))+"%")
-        sys.stdout.write("/100%")
+        self.partsize = (self._reader.get_rcv_seq() + 1) * 32768
+        if self.partsize > self.filesize:
+            self.partsize = self.filesize
+        progress[id] = self.partsize/self.filesize
+        
+
     def run(self):
         while not(self._reader.is_done()):
             stop_flag = threading.Event()
@@ -42,16 +45,15 @@ class Sender:
             timer.start()
             ack, _ = self._socket.recvfrom(1024)
             while not(self._reader.receive_ack(ack)):
-                print("1")
                 ack, _ = self._socket.recvfrom(1024)
             stop_flag.set()
-        self.partsize=0
         
 
 
 def file_sender_thread(ip, port, filepath, id):
     sender = Sender(ip, port, filepath, id)
     sender.run()
+    print(ip, port, filepath, id)
 
 def progresbar(): 
     for i in range(21):
@@ -59,12 +61,36 @@ def progresbar():
         sys.stdout.write("[%-20s] %d%%" % ('='*i, 5*i))
         time.sleep(0.01)
     print()
+
 if __name__ == "__main__":
     UDP_IP = input("Insert receiver IP   : ")
     UDP_PORT = int(input("Insert receiver port : "))
     n = int(input("Insert number of files to send: "))
+    thread = []
+    filepath = []
+    global progress
+    progress = []
     for i in range(n):
-        filepath = input('Insert Filepath #' + str(i) + ': ')
-        thread = threading.Thread(target=file_sender_thread, args=(UDP_IP,  UDP_PORT, filepath, i))
-        thread.start()
+        thread.append('')
+        progress.append('0')
+        filepath.append(input('Insert Filepath #' + str(i) + ': '))
+        thread[i] = threading.Thread(target=file_sender_thread, args=(UDP_IP,  UDP_PORT, filepath[i], i))
+    for i in range(n):
+        thread[i].start()
+    while True: 
+        if os.name =='nt':
+            os.system('cls')
+        else:
+            os.system('clear')
+        for i in range(n):
+            sys.stdout.write("[%-20s]" % ('='*int(progress[i]*20)))
+            sys.stdout.write(str(int(progress[i]*100))+"%")
+            sys.stdout.write("/100%")
+            sys.stdout.write("   " + filepath[i])
+            sys.stdout.write('\n')
+            sys.stdout.flush()
+        time.sleep(0.01)
+        
+        
     
+
