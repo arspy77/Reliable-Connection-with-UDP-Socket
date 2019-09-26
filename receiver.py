@@ -32,6 +32,6 @@ class Receiver:
                 print("received bad packet from", ret_addr)
 
 if __name__ == "__main__":
-    port_number = sys.argv[1]
+    port_number = int(sys.argv[1])
     rec = Receiver(port_number)
     rec.run()
