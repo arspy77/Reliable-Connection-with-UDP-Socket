@@ -26,7 +26,7 @@ class Sender:
         self._id = id
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._reader = FilePacketSender(filename, self._id)
-        self.filesize = os.stat(filename).st_size
+        self.filesize = os.stat(filename).st_size + 1 + len(filename)
         self.partsize = 0
         global progress
 
